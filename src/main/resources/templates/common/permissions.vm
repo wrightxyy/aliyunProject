@@ -1,0 +1,10 @@
+<div class="row">
+    <div class="col-lg-12">
+        <h1 class="page-header">ACL</h1>
+        <div class="row">
+            <div class="col-lg-12">
+                您没有权限 $!{request.getParameter("permissionName")}
+            </div>
+        </div>
+    </div>
+</div>

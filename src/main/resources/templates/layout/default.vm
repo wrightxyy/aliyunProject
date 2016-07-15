@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    #if($!page_title)
+        <title>交易BOPS后台 - $!page_title</title>
+    #else
+        <title>Winston</title>
+    #end
+    <!--favicon-->
+    <link href="#springUrl('/img/favicon.ico')" rel="Shortcut Icon" type="image/x-icon">
+    #parse('layout/links.vm')
+    #parse('layout/scripts.vm')
+</head>
+<body>
+<div id="wrapper">
+    #parse('layout/sidebar.vm')
+    <div id="page-wrapper">
+        <div class="container-fluid">
+            $screen_content
+        </div>
+    </div>
+</div>
+</body>
+</html>

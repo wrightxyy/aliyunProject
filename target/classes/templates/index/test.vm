@@ -1,0 +1,10 @@
+hello xyy!!!
+name is ${name}
+<br/>
+#if(${list})
+    #foreach(${testDO} in ${list})
+        ${testDO.id},${testDO.name},${testDO.pid}<br>
+    #end
+#else
+目前没有数据!
+#end

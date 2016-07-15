@@ -1,0 +1,9 @@
+<!-- jQuery first, then Bootstrap JS. -->
+<script type="text/javascript" src="#springUrl('/static/js/jquery.min.js')"></script>
+<script type="text/javascript" src="#springUrl('/static/js/bootstrap.min.js')"></script>
+<script type="text/javascript" src="#springUrl('/static/js/metisMenu.min.js')"></script>
+<script type="text/javascript" src="#springUrl('/static/js/sb-admin-2.js')"></script>
+<!-- Custom JS -->
+#foreach($script in $!scripts)
+<script type='text/javascript' src="#springUrl($script)"></script>
+#end

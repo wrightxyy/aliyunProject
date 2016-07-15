@@ -1,0 +1,228 @@
+#set($orderId = $!{request.getParameter("orderId")})
+#set($links = ['/static/css/jstree.css','/static/css/json_format.css'])
+#set($scripts = ['/static/js/jstree.min.js','/static/js/json_format.js'])
+<style>
+    html,
+    body,
+    #container {
+        height: 100%;
+        font: small/1.5 "宋体", serif;
+    }
+
+    #container {
+        width: 100%;
+        display: table;
+    }
+
+    #header {
+        width: 100%;
+    }
+
+    #wrap {
+        width: 100%;
+        height: 100%;
+        display: table;
+    }
+
+    #left {
+        height: 100%;
+        display: table-cell;
+    }
+
+    #right {
+        width: 100%;
+        display: table-cell;
+    }
+
+    label {
+        display: inline-block;
+    }
+</style>
+#if(${orderId})
+    #set($layout = "/layout/tlog.vm")
+<div id="container">
+    <div id="header"></div>
+    <div id="content">
+        <div id="wrap">
+            <div id="left">
+                <div class="tree">
+                    <input id="jstree_q"/>
+                    <div id="jstree"></div>
+                </div>
+            </div>
+            <div id="right"></div>
+        </div>
+    </div>
+</div>
+<script>
+    var resultObj = {};
+    function findGroups() {
+        var groups = {};
+        for (var idx in resultObj.data) {
+            var item = findItem(idx);
+            if (groups[item.operation] == null) {
+                if (item.operation.indexOf('viewOrder') > -1 || item.operation.indexOf('DETAIL_PAGE') > -1) {
+                    groups[item.operation] = false;
+                } else {
+                    groups[item.operation] = true;
+                }
+            }
+        }
+        return groups;
+    }
+    function findItem(idx) {
+        var id = resultObj.data.length - idx - 1;
+        var item = resultObj.data[id];
+        return item;
+    }
+    function findExcludes() {
+        var excludes = {};
+        $('input[type=checkbox]').each(function (idx, checkbox) {
+            excludes[checkbox.name] = checkbox.checked == false;
+        })
+        return excludes;
+    }
+    function treeJson() {
+        var excludes = findExcludes();
+        var json = {
+            id: resultObj.data.length
+            , state: {opened: true}
+            , children: []
+        };
+        var size = 0;
+        var keys = {};
+        for (var idx in resultObj.data) {
+            var item = findItem(idx);
+            if (excludes[item.operation] == true) {
+                continue;
+            }
+            size++;
+            if (keys[item.traceId] == null) {
+                keys[item.traceId] = {children: []};
+                json.children.push(keys[item.traceId]);
+            }
+            var itemJson = {
+                id: idx,
+                text: item.operation + " - " + item.message,
+                children: []
+            };
+            keys[item.traceId].text = item.date + " - " + item.operation;
+            keys[item.traceId].children.push(itemJson);
+            if (item.level == 'ERROR') {
+                itemJson.icon = 'icon-warning-sign';
+                keys[item.traceId].icon = 'icon-warning-sign';
+                itemJson.a_attr = {'style': 'color: red'};
+                keys[item.traceId].a_attr = {'style': 'color: red'};
+            }
+        }
+        json.text = resultObj.data[0].tradeId + ' - ' + size;
+        for (var idx in json.children) {
+            var children = json.children[idx];
+            children.children = children.children.reverse();
+        }
+        return json;
+    }
+
+    function init() {
+        var groups = findGroups();
+        for (var idx in groups) {
+            if (groups[idx]) {
+                $('#header').append('<label><input name="' + idx + '" type="checkbox" checked="checked"/>' + idx + '</label>');
+            } else {
+                $('#header').append('<label><input name="' + idx + '" type="checkbox"/>' + idx + '</label>');
+            }
+        }
+        $('#jstree').jstree({
+            'core': {
+                'data': treeJson(resultObj)
+            }, "types": {
+                "default": {
+                    "icon": "icon-bolt"
+                }
+            },
+            "plugins": ["search", "types"]
+        });
+        var to = false;
+        $('#jstree_q').keyup(function () {
+            if (to) {
+                clearTimeout(to);
+            }
+            to = setTimeout(function () {
+                var v = $('#jstree_q').val();
+                $('#jstree').jstree(false).search(v);
+            }, 250);
+        });
+        $('#jstree').on("changed.jstree", function (e, data) {
+            console.log(data.node)
+            if (data.selected.length == 1) {
+                var items = [];
+                if (data.node.id == resultObj.data.length) {
+                    for (var idx in data.node.children_d) {
+                        var id = data.node.children_d[idx];
+                        var item = findItem(id);
+                        if (item != null) {
+                            items.push(item);
+                        }
+                    }
+                } else if (data.node.children.length > 0) {
+                    for (var idx in data.node.children) {
+                        var id = data.node.children[idx];
+                        items.push(findItem(id));
+                    }
+                } else {
+                    items.push(findItem(data.node.id));
+                }
+                Process(JSON.stringify(items), 'right');
+            }
+        });
+        $('input[type=checkbox]').change(function () {
+            $('#jstree').jstree(true).settings.core.data = treeJson();
+            $('#jstree').jstree(true).refresh();
+        });
+    }
+    $(function () {
+        $.getJSON('#springUrl("/ta/tlogData.json?orderId=${orderId}")', function (result) {
+            for (var idx in result.data) {
+                var item = result.data[idx];
+                try {
+                    item.traceContext = $.parseJSON(item.traceContext);
+                } catch (ex) {
+
+                }
+            }
+            resultObj = result;
+            init();
+        })
+    });
+</script>
+#else
+<div class="row">
+    <div class="col-lg-12">
+        <h1 class="page-header">Tlog查询</h1>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        查询
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <form role="form">
+                                    <div class="form-group">
+                                        <label>orderId</label>
+                                        <input class="form-control" name="orderId"
+                                               value="$!{request.getParameter("orderId")}">
+                                        <p class="help-block">请输入订单号进行查询</p>
+                                    </div>
+                                    <button type="submit" class="btn btn-default">提交</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+#end

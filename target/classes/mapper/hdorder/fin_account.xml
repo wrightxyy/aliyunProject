@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.alibaba.intl.winston.mapper.hdorder.FinAccountMapper">
+    <resultMap id="baseColumnMap" type="FinAccountDO">
+        <result column="id" property="id" jdbcType="BIGINT"/>
+        <result column="gmt_create" property="gmtCreate" jdbcType="TIMESTAMP"/>
+        <result column="gmt_modified" property="gmtModified" jdbcType="TIMESTAMP"/>
+        <result column="ali_member_id" property="aliMemberId" jdbcType="BIGINT"/>
+        <result column="acc_type" property="accType" jdbcType="VARCHAR"/>
+        <result column="biz_type" property="bizType" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="amount" property="amount" jdbcType="BIGINT"/>
+        <result column="balance" property="balance" jdbcType="BIGINT"/>
+        <result column="frozen_amount" property="frozenAmount"
+                jdbcType="BIGINT"/>
+        <result column="debt_amount" property="debtAmount" jdbcType="BIGINT"/>
+        <result column="valid_date" property="validDate" jdbcType="TIMESTAMP"/>
+        <result column="invalid_date" property="invalidDate" jdbcType="TIMESTAMP"/>
+        <result column="amount_modified_date" property="amountModifiedDate"
+                jdbcType="TIMESTAMP"/>
+        <result column="virtual_company_code" property="virtualCompanyCode"
+                jdbcType="VARCHAR"/>
+        <result column="owner_type" property="ownerType" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="baseColumn">
+        id, gmt_create, gmt_modified, ali_member_id, acc_type,
+        biz_type,
+        status,amount,balance,frozen_amount,debt_amount,valid_date,invalid_date,amount_modified_date,virtual_company_code,owner_type
+    </sql>
+
+    <select id="findAll" resultMap="baseColumnMap">
+        SELECT * FROM fin_account limit 20
+    </select>
+
+</mapper>

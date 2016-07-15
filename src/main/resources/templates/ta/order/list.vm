@@ -1,0 +1,114 @@
+#set($scripts = ['/static/js/jquery.twbsPagination.min.js'])
+<form class="form-horizontal well" action="" method="post" style="padding-bottom: 20px;">
+    <label>订单id</label>
+    <input type="text" id="orderId" name="orderId" value="$!orderId"/>
+    <label>登录用户名</label>
+    <input type="text" id="loginId" name="loginId" value="$!loginId"/>
+    <label>角色</label>
+    <select name="role" id="role">
+        <option value="buyer"
+            #if($!role=='buyer')
+                selected='selected'
+            #end
+        >买家
+        </option>
+        <option value="seller"
+            #if($!role=='seller')
+                selected='selected'
+            #end
+        >卖家
+        </option>
+    </select>
+    <button type="button" id="submitForm">Submit</button>
+</form>
+<table class="table table-bordered table-hover table-striped">
+    <thead>
+    <tr class="info">
+        <td>订单id</td>
+        <td>订单类型</td>
+        <td>创建时间</td>
+        <td>卖家账户</td>
+        <td>买家账户</td>
+        <td>渠道</td>
+        <td>市场</td>
+        <td>status</td>
+        <td>action</td>
+    </tr>
+    </thead>
+    <tbody id="orderListTbody">
+    </tbody>
+</table>
+<div id="totalTags">
+</div>
+<ul id="pagination-demo" class="pagination-sm">
+</ul>
+
+<script language="javascript" type="text/javascript">
+    var totalPage = 0;
+    var totalCount = 0;
+    function queryList(page) {
+        var loginId = $("#loginId").val();
+        var orderId = $("#orderId").val();
+        var role = $("#role").val();
+        var businessType = $("#businessType").val();
+        queryData(page, loginId, orderId, role, businessType);
+    }
+    $(function () {
+
+        $('#submitForm').click(function () {
+            queryList(1);
+
+        });
+    });
+
+    function queryData(currentPage, loginId, orderId, role, businessType) {
+        $.getJSON('#springUrl("/ta/order/listOrders.json")', {
+            "page": currentPage,
+            "loginId": loginId,
+            "orderId": orderId,
+            "role": role,
+            "businessType": businessType
+        }, function (result) {
+            var orderListData = "";
+            var orderList = result.orderList;
+            if(orderList == null) return;
+            totalCount = result.total;
+            totalPage = result.totalPage;
+            for (var i = 0; i < orderList.length; i++) {
+                var detailUrl;
+                if ('trade_assurance' == orderList[i].businessType) {
+                    detailUrl = '#springUrl("/ta/order/detail.htm?orderId=")' + orderList[i].orderId + "&role=" + role + "&accountId=";
+                    if ('seller' == role) {
+                        detailUrl += orderList[i].sellerAccountId;
+                    } else {
+                        detailUrl += orderList[i].buyerAccountId;
+                    }
+                } else {
+                    detailUrl = "http://mht.bops.alibaba.com/order/mhtOrderDetail.htm?orderId=" + orderList[i].orderId;
+                }
+                var oldDetailUrl = "http://credit.bops.alibaba.com/bao/showBaoOrderDetail.htm?orderId=" + orderList[i].orderId;
+                orderListData += "<tr>";
+                orderListData += "<td><a target='_blank' href='" + detailUrl + "'>" + orderList[i].orderId + "</a><br/><a target='_blank' href='" + oldDetailUrl + "'>回老的订单详情</a></td>";
+                orderListData += "<td>" + orderList[i].businessType + "</td>";
+                orderListData += "<td>" + orderList[i].gmtCreateDate + "</td>";
+                orderListData += "<td>aliMemberId:" + orderList[i].sellerAlimemberId + "<br/>accountId:" + orderList[i].sellerAccountId + "<br/>login:" + orderList[i].sellerLoginId + "<br/>" + orderList[i].sellerEmail + "</td>";
+                orderListData += "<td>aliMemberId:" + orderList[i].buyerAlimemberId + "<br/>accountId:" + orderList[i].buyerAccountId + "<br/>login:" + orderList[i].buyerLoginId + "<br/>" + orderList[i].buyerEmail + "</td>";
+                orderListData += "<td>" + orderList[i].channel + "</td>";
+                orderListData += "<td>" + orderList[i].origin + "</td>";
+                orderListData += "<td>" + orderList[i].status + "</td>";
+                orderListData += "<td>" + orderList[i].actionStr + "</td>";
+                orderListData += "</tr>";
+            }
+            $("#orderListTbody").html(orderListData);
+            $("#totalTags").html("总条数：" + totalCount + ",当前页/总页数：" + currentPage + "/" + totalPage);
+            $('#pagination-demo').twbsPagination({
+                totalPages: totalPage,
+                visiblePages: currentPage,
+                onPageClick: function (event, page) {
+                    queryList(page);
+                }
+            });
+
+        });
+    }
+</script>
